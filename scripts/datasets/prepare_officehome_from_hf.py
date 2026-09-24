@@ -20,7 +20,7 @@ for entry in sys.path:
     clean_sys_path.append(entry)
 sys.path = clean_sys_path
 
-from datasets import load_dataset
+from datasets import Image, load_dataset
 
 
 DOMAIN_MAP = {
@@ -74,6 +74,7 @@ def main():
 
     label_feature = dataset.features.get("label")
     label_names = getattr(label_feature, "names", None)
+    dataset = dataset.cast_column("image", Image(decode=False))
 
     target_dir.mkdir(parents=True, exist_ok=True)
 
@@ -91,15 +92,17 @@ def main():
         out_dir.mkdir(parents=True, exist_ok=True)
 
         image = sample["image"]
-        ext = ".jpg"
-        image_path = getattr(image, "filename", None)
-        if image_path:
-            suffix = Path(image_path).suffix.lower()
-            if suffix:
-                ext = suffix
+        image_bytes = image.get("bytes")
+        if not image_bytes:
+            raise ValueError(f"Office-Home row {idx} has no embedded image bytes")
 
-        out_path = out_dir / f"{idx:06d}{ext}"
-        image.save(out_path)
+        original_name = Path(image.get("path") or "").name
+        if not original_name:
+            original_name = f"{idx:06d}.jpg"
+        out_path = out_dir / original_name
+        if out_path.exists():
+            raise FileExistsError(f"Duplicate Office-Home image path: {out_path}")
+        out_path.write_bytes(image_bytes)
 
     print(f"Prepared Office-Home from HF dataset into {target_dir}")
 
