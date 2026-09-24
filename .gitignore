@@ -10,10 +10,13 @@ __pycache__/
 .env
 
 data/
+/data
 downloads/
 output/
+/output
 outputs/
 results/
+/results
 runs/
 checkpoints/
 assets/
