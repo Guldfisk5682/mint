@@ -23,11 +23,6 @@ mapfile -t order <<< "${order_text}"
 order_cfg="['${order[0]}','${order[1]}']"
 
 run_dir="${ROOT_DIR}/output/office31_mtda/${METHOD_TAG}/${SOURCE}2${target_tag}/seed${SEED}"
-if [[ -s "${run_dir}/mtda_metrics.json" ]]; then
-  echo "Completed metrics already exist; skipping ${run_dir}"
-  exit 0
-fi
-
 cfg_opts=(
   TRAINER.MAPLE_MTDA.CURRICULUM.DOMAIN_ORDER "${order_cfg}"
   TRAINER.MAPLE_MTDA.CURRICULUM.REPLAY.ENABLED True
@@ -54,8 +49,13 @@ cfg_opts=(
   --trainer CurriculumContinuousSharedProjMaPLeMTDA \
   --trainer-config config/trainers/mint.yaml \
   --dataset-config config/datasets/office31_mtda.yaml \
+  --score-manifest "${difficulty_file}" \
   --data "${DATA_ROOT}" \
   --effective-opts "${cfg_opts[*]}"
+if [[ -s "${run_dir}/mtda_metrics.json" ]]; then
+  echo "Completed matching MINT run: ${run_dir}"
+  exit 0
+fi
 
 "${PYTHON_BIN}" train.py \
   --root "${DATA_ROOT}" \

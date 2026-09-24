@@ -47,11 +47,6 @@ target_codes=()
 for ((index=0; index<${#tag}; index++)); do
   target_codes+=("${tag:index:1}")
 done
-if [[ -s "${run_dir}/mtda_metrics.json" ]]; then
-  echo "Baseline result already exists: ${run_dir}/mtda_metrics.json"
-  exit 0
-fi
-
 overrides=(TEST.FINAL_MODEL last_step)
 if [[ "${METHOD}" == damp ]]; then
   overrides+=(TRAIN.SOURCE_ONLY False DATALOADER.TRAIN_U.SAME_AS_X False)
@@ -72,6 +67,10 @@ fi
   --trainer-config "config/trainers/${METHOD}.yaml" \
   --dataset-config "${dataset_config}" --data "${DATA_ROOT}" \
   --effective-opts "${overrides[*]}"
+if [[ -s "${run_dir}/mtda_metrics.json" ]]; then
+  echo "Completed matching baseline run: ${run_dir}"
+  exit 0
+fi
 
 "${PYTHON_BIN}" train.py --root "${DATA_ROOT}" --seed "${SEED}" \
   --trainer "${trainer}" --dataset-config-file "${dataset_config}" \

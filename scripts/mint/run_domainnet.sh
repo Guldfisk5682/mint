@@ -76,8 +76,13 @@ echo "DomainNet ours budget: mode=${BUDGET_MODE}, epochs=${max_epoch}, max_batch
   --trainer CurriculumContinuousSharedProjMaPLeMTDA \
   --trainer-config config/trainers/mint.yaml \
   --dataset-config config/datasets/domainnet_mtda.yaml \
+  --score-manifest "${difficulty_file}" \
   --data "${DATA_ROOT}" \
   --effective-opts "${cfg_opts[*]}"
+if [[ -s "${run_dir}/mtda_metrics.json" ]]; then
+  echo "Completed matching MINT run: ${run_dir}"
+  exit 0
+fi
 
 "${PYTHON_BIN}" train.py \
   --root "${DATA_ROOT}" \

@@ -18,6 +18,7 @@ from dassl.engine import build_trainer
 from dassl.utils import set_random_seed
 
 import train
+from score_utils import sha256_file
 
 
 DOMAINS = {
@@ -130,11 +131,17 @@ def main():
         scores,
         key=lambda domain: (scores[domain]["mean_normalized_entropy"], domain),
     )
+    checkpoint = (
+        Path(args.model_dir) / "ContinuousSharedProjMaPLeMTDA"
+        / f"model.pth.tar-{args.load_epoch}"
+    )
+    checkpoint_sha256 = sha256_file(checkpoint)
     payload = {
         "source": DOMAINS[args.source],
         "seed": args.seed,
         "load_epoch": args.load_epoch,
         "model_dir": str(Path(args.model_dir).resolve()),
+        "checkpoint_sha256": checkpoint_sha256,
         "scoring_split": "target_train",
         "selection_uses_target_labels": False,
         "selection_uses_target_test_inputs": False,

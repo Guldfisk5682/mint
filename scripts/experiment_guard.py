@@ -3,6 +3,7 @@
 import argparse
 import hashlib
 import json
+import subprocess
 from pathlib import Path
 
 
@@ -10,19 +11,33 @@ MANIFEST_NAME = "experiment_manifest.json"
 
 
 def canonical_payload(args):
+    code_commit = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], text=True
+    ).strip()
     return {
+        "code_commit": code_commit,
         "data": str(Path(args.data).expanduser().resolve()),
         "dataset_config": str(Path(args.dataset_config).expanduser().resolve()),
+        "dataset_config_sha256": hashlib.sha256(
+            Path(args.dataset_config).read_bytes()
+        ).hexdigest(),
         "effective_opts": args.effective_opts.strip(),
         "extra_opts": args.extra_opts.strip(),
         "method_tag": args.method_tag,
         "post_init_load_epoch": args.post_init_load_epoch,
         "post_init_method_tag": args.post_init_method_tag,
         "seed": args.seed,
+        "score_manifest_sha256": (
+            hashlib.sha256(Path(args.score_manifest).read_bytes()).hexdigest()
+            if args.score_manifest else ""
+        ),
         "source": args.source,
         "targets": args.targets,
         "trainer": args.trainer,
         "trainer_config": str(Path(args.trainer_config).expanduser().resolve()),
+        "trainer_config_sha256": hashlib.sha256(
+            Path(args.trainer_config).read_bytes()
+        ).hexdigest(),
     }
 
 
@@ -40,6 +55,7 @@ def parse_args():
     parser.add_argument("--source", required=True)
     parser.add_argument("--targets", nargs="+", required=True)
     parser.add_argument("--seed", type=int, required=True)
+    parser.add_argument("--score-manifest", default="")
     parser.add_argument("--trainer", required=True)
     parser.add_argument("--trainer-config", required=True)
     parser.add_argument("--dataset-config", required=True)
@@ -54,6 +70,11 @@ def parse_args():
 
 def main():
     args = parse_args()
+    dirty = subprocess.check_output(
+        ["git", "status", "--porcelain"], text=True
+    ).strip()
+    if dirty:
+        raise SystemExit("Commit experiment code and configs before launching a run")
     output_dir = Path(args.output_dir).expanduser().resolve()
     manifest_path = output_dir / MANIFEST_NAME
     payload = canonical_payload(args)

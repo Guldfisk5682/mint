@@ -5,6 +5,8 @@ import argparse
 import json
 from pathlib import Path
 
+from score_utils import sha256_file
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -28,6 +30,13 @@ def main():
         raise ValueError("Target-test inputs must not select the curriculum order")
     if any("accuracy" in metrics for metrics in payload["scores"].values()):
         raise ValueError("Difficulty manifest unexpectedly contains target accuracy")
+    checkpoint = (
+        Path(payload["model_dir"]) / "ContinuousSharedProjMaPLeMTDA"
+        / f"model.pth.tar-{payload['load_epoch']}"
+    )
+    actual_hash = sha256_file(checkpoint)
+    if actual_hash != payload.get("checkpoint_sha256"):
+        raise ValueError("Difficulty score does not match its source-only checkpoint")
     order = payload[args.direction]
     if len(order) != len(args.targets) or set(order) != set(args.targets):
         raise ValueError("Difficulty order does not match the requested target domains")

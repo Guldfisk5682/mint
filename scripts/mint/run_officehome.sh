@@ -30,7 +30,12 @@ opts=(TRAINER.MAPLE_MTDA.CURRICULUM.DOMAIN_ORDER "${order_cfg}")
   --trainer CurriculumContinuousSharedProjMaPLeMTDA \
   --trainer-config config/trainers/mint.yaml \
   --dataset-config config/datasets/office_home_mtda.yaml \
-  --data "${DATA_ROOT}" --effective-opts "${opts[*]}"
+  --data "${DATA_ROOT}" --score-manifest "${score_file}" \
+  --effective-opts "${opts[*]}"
+if [[ -s "${run_dir}/mtda_metrics.json" ]]; then
+  echo "Completed matching MINT run: ${run_dir}"
+  exit 0
+fi
 
 "${PYTHON_BIN}" train.py --root "${DATA_ROOT}" --seed "${SEED}" \
   --trainer CurriculumContinuousSharedProjMaPLeMTDA \

@@ -34,11 +34,6 @@ order_cfg="['${order[0]}','${order[1]}','${order[2]}']"
 target_tag="$(IFS=''; echo "${target_codes[*]}")"
 run_dir="${OUTPUT_ROOT}/officehome_ablation_${VARIANT}_seed${SEED}/${SOURCE}2${target_tag}/seed${SEED}"
 
-if [[ -s "${run_dir}/mtda_metrics.json" ]]; then
-  echo "Completed metrics already exist; skipping ${run_dir}"
-  exit 0
-fi
-
 trainer="CurriculumContinuousSharedProjMaPLeMTDA"
 trainer_config="config/trainers/mint.yaml"
 cfg_opts=(
@@ -102,8 +97,13 @@ esac
   --trainer "${trainer}" \
   --trainer-config "${trainer_config}" \
   --dataset-config config/datasets/office_home_mtda.yaml \
+  --score-manifest "${score_file}" \
   --data "${DATA_ROOT}" \
   --effective-opts "${cfg_opts[*]}"
+if [[ -s "${run_dir}/mtda_metrics.json" ]]; then
+  echo "Completed matching ablation run: ${run_dir}"
+  exit 0
+fi
 
 "${PYTHON_BIN}" train.py \
   --root "${DATA_ROOT}" \

@@ -42,8 +42,10 @@ def main():
         "seed": args.seed,
         "per_domain_accuracy": accuracies,
         "macro_accuracy": sum(accuracies.values()) / len(accuracies),
-        "executed_stage_order": [row["domain"] for row in audits],
-        "optimizer_steps": sum(int(row["optimizer_steps"]) for row in audits),
+        "executed_stage_order": [row["domain"] for row in audits] if audits else None,
+        "optimizer_steps": (
+            sum(int(row["optimizer_steps"]) for row in audits) if audits else None
+        ),
         "checkpoint_selection": "last_step",
     }
     output = args.run_dir / "mtda_metrics.json"
