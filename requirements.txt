@@ -14,3 +14,4 @@ wilds
 tensorboard
 tabulate
 datasets
+timm

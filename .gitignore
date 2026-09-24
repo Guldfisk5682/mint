@@ -16,6 +16,7 @@ outputs/
 results/
 runs/
 checkpoints/
+assets/
 *.pt
 *.pth
 *.pth.tar
@@ -23,11 +24,19 @@ checkpoints/
 *.ckpt
 *.safetensors
 *.onnx
+*.bin
+*.h5
+*.npy
+*.npz
 *.parquet
 *.arrow
 *.jpg
 *.jpeg
 *.png
+*.bmp
+*.webp
+*.tif
+*.tiff
 *.zip
 *.tar
 *.tar.gz

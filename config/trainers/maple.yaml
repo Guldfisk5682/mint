@@ -1,0 +1,61 @@
+DATALOADER:
+  TRAIN_X:
+    BATCH_SIZE: 8
+  TRAIN_U:
+    SAME_AS_X: true
+    BATCH_SIZE: 8
+  TEST:
+    BATCH_SIZE: 100
+  NUM_WORKERS: 8
+
+INPUT:
+  SIZE: (224, 224)
+  INTERPOLATION: bicubic
+  PIXEL_MEAN: [0.48145466, 0.4578275, 0.40821073]
+  PIXEL_STD: [0.26862954, 0.26130258, 0.27577711]
+  TRANSFORMS: [random_resized_crop, random_flip, normalize]
+
+OPTIM:
+  NAME: sgd
+  LR: 0.0035
+  MAX_EPOCH: 5
+  LR_SCHEDULER: cosine
+  WARMUP_EPOCH: 1
+  WARMUP_TYPE: constant
+  WARMUP_CONS_LR: 1e-5
+
+TRAIN:
+  PRINT_FREQ: 20
+  COUNT_ITER: train_x
+  SOURCE_ONLY: true
+
+TEST:
+  EVAL_EVERY_EPOCH: false
+  FINAL_MODEL: last_step
+
+MODEL:
+  BACKBONE:
+    NAME: ViT-B/16
+
+TRAINER:
+  NAME: MaPLeMTDA
+  MAPLE_MTDA:
+    N_CTX: 2
+    CTX_INIT: a photo of a
+    PREC: fp16
+    PROMPT_DEPTH: 9
+    USE_MAPLE_CLIP_BUILD: true
+    LAMBDA_PL: 0.0
+    LAMBDA_PL_FINAL: 0.0
+    PL_SCHEDULE: constant
+    PL_VARIANT: legacy
+    WEAK_PL:
+      ENABLED: false
+    SELF_DISTILL:
+      ENABLED: false
+    DEBUG:
+      PRINT_ONCE: false
+  PROMPT_BASELINE_MTDA:
+    MIX_TARGETS: true
+    LAMBDA_ENT: 0.0
+    ENTROPY_EPS: 1e-8

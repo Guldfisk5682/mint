@@ -6,7 +6,12 @@ import os
 import socket
 import subprocess
 import sys
+import numpy as np
 import torch
+
+# The pinned Dassl RandAugment still references NumPy's removed alias.
+if not hasattr(np, "int"):
+    np.int = int
 
 
 def patch_torch_lr_scheduler_compatibility():
@@ -47,9 +52,13 @@ import datasets.office_home_mtda
 import datasets.domainnet_mtda
 
 import models.cocoop
+import models.coop
+import models.coop_mtda
+import models.cocoop_mtda
 import models.esmaple
 import models.mint
 import models.maple
+import models.damp
 
 
 def _git_output(*args):
@@ -159,6 +168,23 @@ def extend_cfg(cfg):
     # the trainer's existing epoch-based scheduler interface.
     cfg.TRAIN.MAX_BATCHES_PER_EPOCH = -1
     cfg.TRAIN.SOURCE_ONLY = False
+
+    # DAMP follows the upstream dual-optimizer architecture. It shares the
+    # pinned Dassl runtime and this repository's CLIP tokenizer/backbone.
+    cfg.MODEL.BACKBONE.PATH = "./assets"
+    cfg.MODEL.INIT_WEIGHTS_CTX = None
+    cfg.MODEL.INIT_WEIGHTS_PRO = None
+    cfg.OPTIM_C = cfg.OPTIM.clone()
+    cfg.TRAINER.DAMP = CN()
+    cfg.TRAINER.DAMP.N_CTX = 16
+    cfg.TRAINER.DAMP.N_CLS = 2
+    cfg.TRAINER.DAMP.CSC = False
+    cfg.TRAINER.DAMP.PREC = "amp"
+    cfg.TRAINER.DAMP.TAU = 0.5
+    cfg.TRAINER.DAMP.U = 1.0
+    cfg.TRAINER.DAMP.IND = 1.0
+    cfg.TRAINER.DAMP.IM = 1.0
+    cfg.TRAINER.DAMP.STRONG_TRANSFORMS = []
 
     cfg.TRAINER.COOP = CN()
     cfg.TRAINER.COOP.N_CTX = 16  # number of context vectors
@@ -331,6 +357,8 @@ def main(args):
     trainer = build_trainer(cfg)
 
     if args.eval_only:
+        if args.load_epoch is None:
+            raise ValueError("--eval-only requires an explicit --load-epoch; best-val fallback is disabled")
         trainer.load_model(args.model_dir, epoch=args.load_epoch)
         trainer.test()
         return

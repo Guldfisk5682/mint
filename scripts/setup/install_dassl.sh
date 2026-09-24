@@ -8,6 +8,7 @@ DASSL_REV="${DASSL_REV:-c61a1b570ac6333bd50fb5ae06aea59002fb20bb}"
 
 if [ ! -d "${DASSL_DIR}" ]; then
   git clone https://github.com/KaiyangZhou/Dassl.pytorch.git "${DASSL_DIR}"
+  git -C "${DASSL_DIR}" checkout --detach "${DASSL_REV}"
 fi
 
 if [ "$(git -C "${DASSL_DIR}" rev-parse HEAD)" != "${DASSL_REV}" ]; then
